@@ -6,12 +6,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 client = bigquery.Client(project='arla-media-correlation-2025')
-df = client.query('SELECT * FROM `arla-media-correlation-2025.dbt_marts.mart_correlation_input` ORDER BY
-period').to_dataframe()
+df = client.query('SELECT * FROM `arla-media-correlation-2025.dbt_marts.mart_correlation_input` ORDER BY period').to_dataframe()
 
-for v in
-
-['search_arla','search_youtube_ads','search_facebook_ads','search_instagram_ads','consumer_confidence','food_cpi']:
+for v in ['search_arla','search_youtube_ads','search_facebook_ads','search_instagram_ads','consumer_confidence','food_cpi']:
     df[f'{v}_diff'] = df[v].diff()
 df = df.dropna()
 
