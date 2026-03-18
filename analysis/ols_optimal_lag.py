@@ -26,3 +26,20 @@ X = add_constant(df[preds])
 y = df['search_arla_diff']
 m = OLS(y, X).fit(cov_type='HC3')
 print(m.summary())
+
+rows = []
+for var in m.params.index:
+    rows.append({
+        "predictor":     var,
+        "coefficient":   round(m.params[var], 4),
+        "p_value":       round(m.pvalues[var], 4),
+        "significant":   bool(m.pvalues[var] < 0.05),
+        "r_squared":     round(m.rsquared, 4),
+        "adj_r_squared": round(m.rsquared_adj, 4),
+        "n_obs":         int(m.nobs)
+    })
+df_results = pd.DataFrame(rows)
+table_id = "arla-media-correlation-2025.dbt_marts.mart_ols_results"
+job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE", autodetect=True)
+client.load_table_from_dataframe(df_results, table_id, job_config=job_config).result()
+print(f"Loaded {len(df_results)} rows into {table_id}")
