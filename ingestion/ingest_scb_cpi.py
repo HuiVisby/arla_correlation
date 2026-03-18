@@ -8,18 +8,19 @@ DATASET = "raw_ingest"
 
 
 def fetch_food_cpi():
-    """SCB KPI — Consumer Price Index for food and non-alcoholic drinks."""
+    """SCB KPI2020COICOP2M — Food CPI by COICOP division, 2020=100."""
     print("Fetching food CPI from SCB...")
-    url = "https://api.scb.se/OV0104/v1/doris/en/ssd/PR/PR0101/PR0101A/KPItotM"
-    meta = requests.get(url, timeout=30).json()
+    url = "https://api.scb.se/OV0104/v1/doris/en/ssd/PR/PR0101/PR0101A/KPI2020COICOP2M"
     payload = {
         "query": [
-            {"code": "COICOP", "selection": {"filter": "item", "values": ["CP01"]}},
+            {"code": "VaruTjanstegrupp", "selection": {"filter": "item", "values": ["01"]}},
+            {"code": "ContentsCode", "selection": {"filter": "item", "values": ["0000080C"]}},
             {"code": "Tid", "selection": {"filter": "all", "values": ["*"]}}
         ],
         "response": {"format": "json-stat2"}
     }
     r = requests.post(url, json=payload, timeout=30)
+    r.raise_for_status()
     data = r.json()
     periods = list(data["dimension"]["Tid"]["category"]["index"].keys())
     values = data["value"]
