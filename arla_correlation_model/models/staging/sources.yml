@@ -1,0 +1,10 @@
+version: 2
+sources:
+  - name: raw_ingest
+    database: arla-media-correlation-2025
+    schema: raw_ingest
+    tables:
+      - name: scb_food_cpi
+      - name: consumer_confidence
+      - name: google_trends_weekly
+      - name: weather_stockholm_monthly
