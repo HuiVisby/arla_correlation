@@ -148,45 +148,47 @@ def run_var_model(df_diff):
 
 # ── 5. OLS Regression (first-differenced + lagged X) ─────────────────────────
 def run_ols(df_diff):
-    print("\n── Step 4: OLS Regression (first-differenced, 1-month lag) ──")
+    print("\n── Step 4: OLS Regression (Granger-optimal lags) ──")
     df_ols = df_diff.copy()
 
-    # Lag all channel predictors by 1 month
-    lag_channels = [
-        "search_youtube_ads",
-        "search_instagram_ads",
-        "search_facebook_ads",
-        "consumer_confidence",
-        "food_cpi"
+    # Use Granger-optimal lags: YouTube=3, Facebook=4, others=1
+    df_ols["search_youtube_ads_lag3"]    = df_ols["search_youtube_ads_diff"].shift(3)
+    df_ols["search_facebook_ads_lag4"]   = df_ols["search_facebook_ads_diff"].shift(4)
+    df_ols["search_instagram_ads_lag1"]  = df_ols["search_instagram_ads_diff"].shift(1)
+    df_ols["consumer_confidence_lag1"]   = df_ols["consumer_confidence_diff"].shift(1)
+    df_ols["food_cpi_lag1"]              = df_ols["food_cpi_diff"].shift(1)
+    df_ols["avg_temp_lag1"]              = df_ols["avg_temp"].shift(1)
+    df_ols["is_summer"]                  = df_ols["month"].isin([6, 7, 8]).astype(int)
+
+    predictors = [
+        "search_youtube_ads_lag3",
+        "search_facebook_ads_lag4",
+        "search_instagram_ads_lag1",
+        "consumer_confidence_lag1",
+        "food_cpi_lag1",
+        "avg_temp_lag1",
+        "is_summer"
     ]
-    for ch in lag_channels:
-        df_ols[f"{ch}_lag1"] = df_ols[f"{ch}_diff"].shift(1)
-
-    # Add seasonal dummy
-    df_ols["is_summer"] = df_ols["month"].isin([6, 7, 8]).astype(int)
-    df_ols["avg_temp_ctrl"] = df_ols["avg_temp"]
-
-    predictors = [f"{ch}_lag1" for ch in lag_channels] + ["is_summer", "avg_temp_ctrl"]
     df_ols = df_ols.dropna(subset=["search_arla_diff"] + predictors)
 
     X = add_constant(df_ols[predictors])
     y = df_ols["search_arla_diff"]
 
-    model = OLS(y, X).fit(cov_type="HC3")  # robust standard errors
+    model = OLS(y, X).fit(cov_type="HC3")
     print(model.summary())
 
     rows = []
     for var in model.params.index:
         rows.append({
-            "predictor":   var,
-            "coefficient": round(model.params[var], 4),
-            "std_error":   round(model.bse[var], 4),
-            "t_statistic": round(model.tvalues[var], 4),
-            "p_value":     round(model.pvalues[var], 4),
-            "significant": model.pvalues[var] < 0.05,
-            "r_squared":   round(model.rsquared, 4),
+            "predictor":     var,
+            "coefficient":   round(model.params[var], 4),
+            "std_error":     round(model.bse[var], 4),
+            "t_statistic":   round(model.tvalues[var], 4),
+            "p_value":       round(model.pvalues[var], 4),
+            "significant":   model.pvalues[var] < 0.05,
+            "r_squared":     round(model.rsquared, 4),
             "adj_r_squared": round(model.rsquared_adj, 4),
-            "n_obs":       int(model.nobs)
+            "n_obs":         int(model.nobs)
         })
     return pd.DataFrame(rows)
 
