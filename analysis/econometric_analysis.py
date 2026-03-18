@@ -43,8 +43,8 @@ def run_adf_tests(df):
         series = df[var].dropna()
         result = adfuller(series, autolag="AIC")
         is_stationary = result[1] < 0.05
-        print(f"  {var:30s} p={result[1]:.4f}  {'STATIONARY' if is_stationary else 'NON-STATIONARY → needs
-differencing'}")
+        status = "STATIONARY" if is_stationary else "NON-STATIONARY - needs differencing"
+        print(f"  {var:30s} p={result[1]:.4f}  {status}")
         rows.append({
             "variable":       var,
             "adf_statistic":  round(result[0], 4),
